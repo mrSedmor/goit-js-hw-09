@@ -1,0 +1,34 @@
+{
+  "name": "parcel-project-template",
+  "version": "2.0.0",
+  "description": "",
+  "homepage": "https://github.com/mrSedmor/goit-js-hw-09",
+  "source": "src/index.html",
+  "scripts": {
+    "start": "parcel",
+    "build": "parcel build --public-url /goit-js-hw-09/",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrSedmor/goit-js-hw-09.git"
+  },
+  "keywords": [],
+  "author": "Serhei Honcharov <mrsedmor@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mrSedmor/goit-js-hw-09/issues"
+  },
+  "dependencies": {
+    "modern-normalize": "^1.1.0"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.6.0",
+    "gh-pages": "^4.0.0",
+    "parcel": "^2.6.0",
+    "parcel-reporter-clean-dist": "^1.0.4",
+    "posthtml-include": "^1.7.4"
+  },
+  "browserslist": "> 0.5%, last 2 versions, not dead"
+}
