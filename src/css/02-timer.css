@@ -1,0 +1,39 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#datetime-picker {
+  font-size: 24px;
+  text-align: center;
+}
+
+.button {
+  padding: 6px 12px;
+}
+
+.timer {
+  display: flex;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+.field {
+  min-width: 65px;
+
+  line-height: 1.2;
+  text-align: center;
+}
+
+.value {
+  display: block;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.label {
+  font-size: 14px;
+  text-transform: uppercase;
+}
