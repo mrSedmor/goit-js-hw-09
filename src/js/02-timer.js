@@ -2,10 +2,6 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 import Notiflix from 'notiflix';
-
-import convertMs from './convert-ms';
-import Timer from './timer';
-
 import '../css/02-timer.css';
 
 const startButtonRef = document.querySelector('[data-start]');
@@ -15,21 +11,27 @@ const hoursFieldRef = document.querySelector('[data-hours]');
 const minutesFieldRef = document.querySelector('[data-minutes]');
 const secondsFieldRef = document.querySelector('[data-seconds]');
 
-const datetimePickerElem = document.querySelector('#datetime-picker');
+let timerId = null;
+let isTimerActive = false;
+
 const datetimePickerOptions = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
   mode: 'single',
-  onClose: onDatetimeSelect,
+  onClose: ([date]) => {
+    if (date.getTime() <= Date.now()) {
+      Notiflix.Notify.failure('Please choose a date in the future');
+      startButtonRef.disabled = true;
+      return;
+    }
+
+    startButtonRef.disabled = false;
+  },
 };
 
-const datetimePicker = flatpickr(datetimePickerElem, datetimePickerOptions);
-
-const timer = new Timer();
-timer.on('update', setTimeLeft);
-timer.on('expire', onTimerExpire);
+const datetimePicker = flatpickr('#datetime-picker', datetimePickerOptions);
 
 startButtonRef.addEventListener('click', onStartButtonClick);
 stopButtonRef.addEventListener('click', onStopButtonClick);
@@ -37,16 +39,43 @@ stopButtonRef.addEventListener('click', onStopButtonClick);
 startButtonRef.disabled = true;
 stopButtonRef.disabled = true;
 
-function validateTime(time) {
-  if (time <= Date.now()) {
-    Notiflix.Notify.failure('Please choose a date in the future');
-    return false;
+function onStartButtonClick() {
+  const expireTime = datetimePicker.selectedDates[0].getTime();
+
+  startButtonRef.disabled = true;
+  stopButtonRef.disabled = false;
+
+  if (isTimerActive) {
+    clearInterval(timerId);
   }
 
-  return true;
+  timerId = setInterval(updateTimer, 1000);
+  updateTimer();
+  isTimerActive = true;
+
+  function updateTimer() {
+    let timeLeft = expireTime - Date.now();
+    if (timeLeft < 1000) {
+      timeLeft = 0;
+      clearInterval(timerId);
+      isTimerActive = false;
+      stopButtonRef.disabled = true;
+      Notiflix.Notify.info("Time's up!");
+    }
+    renderTimer(timeLeft);
+  }
 }
 
-function setTimeLeft(timeMs) {
+function onStopButtonClick() {
+  clearInterval(timerId);
+  isTimerActive = false;
+  renderTimer(0);
+  startButtonRef.disabled =
+    datetimePicker.selectedDates[0].getTime() <= Date.now();
+  stopButtonRef.disabled = true;
+}
+
+function renderTimer(timeMs) {
   const { days, hours, minutes, seconds } = convertMs(timeMs);
   daysFieldRef.textContent = addLeadingZero(days);
   hoursFieldRef.textContent = addLeadingZero(hours);
@@ -58,29 +87,21 @@ function addLeadingZero(value) {
   return value.toString().padStart(2, '0');
 }
 
-function onDatetimeSelect([selectedDate]) {
-  startButtonRef.disabled = !validateTime(selectedDate.getTime());
-}
+function convertMs(ms) {
+  // Number of milliseconds per unit of time
+  const second = 1000;
+  const minute = second * 60;
+  const hour = minute * 60;
+  const day = hour * 24;
 
-function onStartButtonClick() {
-  const time = datetimePicker.selectedDates[0].getTime();
-  if (!validateTime(time)) {
-    startButtonRef.disabled = true;
-    return;
-  }
+  // Remaining days
+  const days = Math.floor(ms / day);
+  // Remaining hours
+  const hours = Math.floor((ms % day) / hour);
+  // Remaining minutes
+  const minutes = Math.floor((ms % hour) / minute);
+  // Remaining seconds
+  const seconds = Math.floor((ms % minute) / second);
 
-  timer.start(time);
-  stopButtonRef.disabled = !timer.isActive();
-}
-
-function onStopButtonClick() {
-  timer.stop();
-  setTimeLeft(0);
-  stopButtonRef.disabled = true;
-}
-
-function onTimerExpire() {
-  stopButtonRef.disabled = true;
-
-  Notiflix.Notify.info("Time's up!");
+  return { days, hours, minutes, seconds };
 }
